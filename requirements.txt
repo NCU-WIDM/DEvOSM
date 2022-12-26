@@ -1,0 +1,9 @@
+transformers
+tensorflow-gpu
+sklearn
+sentence_transformers
+pymongo
+matplotlib
+pandas
+torch
+validators

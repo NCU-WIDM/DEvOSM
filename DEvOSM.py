@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import argparse
 from util.matching import *
@@ -19,9 +20,10 @@ if __name__ == '__main__':
     if os.path.exists(JSON_DIR):
         try:
             for json_file in os.listdir(JSON_DIR):
-                with open(os.path.join(JSON_DIR, json_file), 'r', encoding='utf-8-sig') as fs:
-                    set_data = json.loads(fs.read())
-                sets_data.append(set_data)
+                if re.search('[0-9]{4}.json', json_file):
+                    with open(os.path.join(JSON_DIR, json_file), 'r', encoding='utf-8-sig') as fs:
+                        set_data = json.loads(fs.read())
+                        sets_data.append(set_data)
 
             master = sets_data[0]
 

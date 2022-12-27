@@ -46,9 +46,6 @@ if __name__ == '__main__':
 
             for set_index, set_data in enumerate(sets_data):
                 with open(os.path.join(JSON_DIR, f"Set-{str(set_index)}.json"), 'w+', encoding='utf-8-sig') as fs:
-                    json.dump(set_data, fs)
-
-            with open(os.path.join(ROOT_DIR, "success"), 'w+', encoding='utf-8-sig') as fs:
-                fs.writelines('')
+                    json.dump(set_data, fs)          
         except Exception as e:
             print(e)

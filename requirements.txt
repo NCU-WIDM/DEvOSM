@@ -1,9 +1,6 @@
-transformers
-tensorflow-gpu
-sklearn
-sentence_transformers
-pymongo
-matplotlib
+numpy
+scipy
+scikit-learn
 pandas
-torch
 validators
+sentence_transformers

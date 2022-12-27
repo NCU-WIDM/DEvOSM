@@ -3,12 +3,9 @@ from sklearn import svm, neighbors
 from scipy.spatial.distance import cosine
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 from .feature import bert_embedding, extract_col_feature, cal_vote_result_for_KNN, classifier
-# from feature_extractor import extract
-
-
-bert_embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 
 def cosine_similarity(a, b):
@@ -16,7 +13,7 @@ def cosine_similarity(a, b):
     return similarity
 
 
-def DP_matching(master_data, slave_data, window_size=3):
+def DP_matching(master_data, slave_data, window_size=5):
     # set1: master_data
     # set2: slave_data
     set1_result = []
@@ -227,6 +224,7 @@ def sets_matching(master, slave):
     #print("master_sets_length:",master_sets_length, "slave_sets_length:",slave_sets_length)
     sets_length_diff = master_sets_length - slave_sets_length
     window_size = abs(sets_length_diff) + 5
+
     #print("window_size:", window_size)
     
     if master_sets_length == 0 and slave_sets_length == 0:
@@ -257,12 +255,10 @@ def sets_matching(master, slave):
     return sets_combine_pairs, used_master_index, used_slave_index
 
 
-def col_matching_forDB(set_result, train, predict, train_index, predict_index, model_select=2):
-    #print(type(train))
+def col_matching_forDB(set_result, train, predict, train_index, predict_index, model_select=2, re_extraction=False):
     print(set_result)
-    result = train.copy()
-    #print(type(result))
-    for master_index,slave_index in set_result.items():
+    result = deepcopy(train)
+    for master_index, slave_index in set_result.items():
             # print("master_index:",master_index,"slave_index:",slave_index)
             #print("serialNumber_index:",serialNumber_index-1)
             #print("slave_index:",slave_index[serialNumber_index-1])
@@ -274,31 +270,23 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                 for le in range(len(slave_index)):
                     result.append(predict[le])
             else:
-                if (slave_index[0]-1) == -1:
-                   # print("slave_index[0]-1 skip")
-                    #no_matching_set += len(slave_index)
+                # if no match slave set
+                if slave_index[0] < 0:
+                    print("SKIP! slave_index[0] ==", slave_index[0])
                     continue
                 else:
+                    sets_train = deepcopy(train[train_index[master_index-1]])
+                    sets_predict = deepcopy(predict[predict_index[slave_index[0]-1]])
 
-                    sets_train = train[train_index[master_index-1]]
-                    #sets_test = predict[slave_index[serialNumber_index-1]-1]
-                    if (slave_index[0]-1) <0:
-                        print("slave_index[0]-1 <0 skip",slave_index[0])
-                        continue;
-                    sets_test = predict[predict_index[slave_index[0]-1]]
-
-                    if len(sets_train[0]) == len(sets_test[0]):
-                        #print()
-                        print("same col")
-                    else:
-                        print("diff col",len(sets_train[0])," ",len(sets_test[0]))
-                        #error += 1
+                    if len(sets_train[0]) != len(sets_predict[0]):
+                        print("column amounts not match", len(sets_train[0]), len(sets_predict[0]))
                         continue
+
                     arr_t = np.array(sets_train)
 
                     df = pd.DataFrame(arr_t, columns=['col'+str(item) for item in range(0,len(arr_t.T))])
 
-                    arr_p = np.array(sets_test)
+                    arr_p = np.array(sets_predict)
 
                     df_predict = pd.DataFrame(arr_p, columns=['col'+str(item) for item in range(0,len(arr_p.T))])    
 
@@ -311,27 +299,26 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                         for i in range(0,len(df)):
                             label_.append(j)
 
-                    label_prdict = []
+                    label_predict = []
                     for j in range(0,len(df_predict.columns)):
                         for i in range(0,len(df_predict)):
-                            label_prdict.append(j)                    
+                            label_predict.append(j)                    
 
                     label_ = np.array(label_)
                     #print(len(label_))
-                    label_prdict = np.array(label_prdict)
-                    #print(len(label_prdict))
+                    label_predict = np.array(label_predict)
+                    #print(len(label_predict))
 
                     if model_select == 1:
                         if 1 in label_:
                             my_model = svm.SVC(probability=True) 
                             my_model = my_model.fit(embeddings, label_)
                     elif model_select == 2: 
-
                         knn_clf = neighbors.KNeighborsClassifier(n_neighbors = len(df.columns))
                         my_model = knn_clf.fit(embeddings, label_)
                         y_predicted = my_model.predict(embeddings_predict)
                         #print(y_predicted)
-                        #print(label_prdict)
+                        #print(label_predict)
 
 
 
@@ -365,15 +352,15 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                 #evl_avg_set += tmp
 
                 #count_current_set_index +=1
-                print(column_result)
+                # print(column_result)
                 #total_set_num +=1
                 
-                #print(column_result)
+                # print(column_result)
                 # print(predict[slave_index[0]-1])
                 index = master_index-1
                 #print(result[index])
                 for i in range(len(predict[predict_index[slave_index[0]-1]])):
-                    #print(i)
+                    # print(i)
                     temp_arr = []
                     
                     for x in column_result:
@@ -385,13 +372,19 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                         #print(predict[predict_index[slave_index[0]-1]][i])
                         #print(predict[predict_index[slave_index[0]-1]][i][x])
                         #print(len(predict[predict_index[slave_index[0]-1]][i][x]))
+                        
                         temp_arr.append(predict[predict_index[slave_index[0]-1]][i][x])
                     
-                    
+                    # check if new data is in previous set data
+                    is_duplicate = False
+                    if re_extraction:
+                        for train_set in result[train_index[index]]:
+                            if set(train_set).issuperset(set(temp_arr)):
+                                is_duplicate = True
+                                break
                     #print(result[index])
-                    result[train_index[index]].append(temp_arr)
-                #print(result[index])    
-                print("done")
+                    if not is_duplicate:
+                        result[train_index[index]].append(temp_arr)  
+                print(f"set {index} done")
     #print(result)
-    
     return result

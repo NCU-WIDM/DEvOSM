@@ -2,6 +2,7 @@ import os
 import re
 import json
 import argparse
+from copy import deepcopy
 from util.matching import *
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -31,21 +32,23 @@ if __name__ == '__main__':
             if len(sets_data) > 1:
                 for slave in sets_data[1:]:
                     # set matching
-                    set_result, master_index, slave_index = sets_matching(master, slave)
+                    set_result, master_index, slave_index = sets_matching(
+                        master, slave)
                     # col matching
-                    master = col_matching_forDB(set_result, master, slave, master_index, slave_index, model_select=2)
+                    master = col_matching_forDB(
+                        set_result, master, slave, master_index, slave_index, model_select=2)
             else:
                 raise Exception("Unable to combine!!!")
 
             sets_data = master
 
             # remove sets_data less than 3
-            for index, data in enumerate(sets_data.copy()):
+            for index, data in enumerate(deepcopy(sets_data)):
                 if len(data) < 3:
                     sets_data.remove(data)
 
             for set_index, set_data in enumerate(sets_data):
                 with open(os.path.join(JSON_DIR, f"Set-{str(set_index)}.json"), 'w+', encoding='utf-8-sig') as fs:
-                    json.dump(set_data, fs)          
+                    json.dump(set_data, fs)
         except Exception as e:
             print(e)

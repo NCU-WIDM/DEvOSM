@@ -10,9 +10,13 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ""
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--root_dir", type=str, required=True)
+    parser.add_argument("-n", "--new_dir", type=str)
     args = parser.parse_args()
 
     ROOT_DIR = args.root_dir
+    NEW_DIR = args.new_dir
+    if NEW_DIR is not None:
+        NEW_JSON_DIR = os.path.join(args.new_dir, 'JSON')
     JSON_DIR = os.path.join(ROOT_DIR, 'JSON')
 
     is_completed = False
@@ -20,11 +24,33 @@ if __name__ == '__main__':
 
     if os.path.exists(JSON_DIR):
         try:
-            for json_file in os.listdir(JSON_DIR):
-                if re.search('[0-9]{4}.json', json_file):
-                    with open(os.path.join(JSON_DIR, json_file), 'r', encoding='utf-8-sig') as fs:
-                        set_data = json.loads(fs.read())
-                        sets_data.append(set_data)
+            if NEW_DIR is None:
+                json_files = [filename for filename in os.listdir(
+                    JSON_DIR) if filename.startswith("0")]
+                for json_file in sorted(json_files, key=lambda x: int(x[:4])):
+                    if re.search('[0-9]{4}.json', json_file):
+                        with open(os.path.join(JSON_DIR, json_file), 'r', encoding='utf-8-sig') as fs:
+                            set_data = json.loads(fs.read())
+                            sets_data.append(set_data)
+            else:
+                old_sets_data = []
+                old_json_files = [filename for filename in os.listdir(
+                    JSON_DIR) if filename.startswith("Set-")]
+                for json_file in sorted(old_json_files, key=lambda x: int(x[4:-5])):
+                    if re.search('Set-[0-9]*.json', json_file):
+                        with open(os.path.join(JSON_DIR, json_file), 'r', encoding='utf-8-sig') as fs:
+                            set_data = json.loads(fs.read())
+                            old_sets_data.append(set_data)
+
+                sets_data.append(old_sets_data)
+
+                new_json_files = [filename for filename in os.listdir(
+                    NEW_JSON_DIR) if filename.startswith("0")]
+                for new_json_file in sorted(new_json_files, key=lambda x: int(x[:4])):
+                    if re.search('[0-9]{4}.json', new_json_file):
+                        with open(os.path.join(NEW_JSON_DIR, new_json_file), 'r', encoding='utf-8-sig') as fs:
+                            set_data = json.loads(fs.read())
+                            sets_data.append(set_data)
 
             master = sets_data[0]
 

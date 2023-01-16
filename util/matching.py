@@ -192,7 +192,7 @@ def sets_data_embedding(sets_data):
     used_sets_index = []
     for index, set_data in enumerate(sets_data):
         if len(set_data) <= 3:
-            print(f"Set_{index} data less than 3. Skip this set!")
+            # print(f"Set_{index} data less than 3. Skip this set!")
             continue
 
         rows_data = []
@@ -210,9 +210,7 @@ def sets_data_embedding(sets_data):
 def sets_matching(master, slave):
     sets_combine_pairs = {}  # 用來處理多Page一起合併的結果
 
-    print("- master -")
     embed_master_data, used_master_index = sets_data_embedding(master)
-    print("- slave -")
     embed_slave_data, used_slave_index = sets_data_embedding(slave)
 
     master_sets_length, slave_sets_length = len(
@@ -285,8 +283,8 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                     predict[predict_index[slave_index[0]-1]])
 
                 if len(sets_train[0]) != len(sets_predict[0]):
-                    print("column amounts not match", len(
-                        sets_train[0]), len(sets_predict[0]))
+                    # print("Column amounts not match", len(
+                    #     sets_train[0]), len(sets_predict[0]))
                     continue
 
                 arr_t = np.array(sets_train)
@@ -395,6 +393,6 @@ def col_matching_forDB(set_result, train, predict, train_index, predict_index, m
                 # print(result[index])
                 if not is_duplicate:
                     result[train_index[index]].append(temp_arr)
-            print(f"set {index} done")
+            # print(f"set {index} done")
     # print(result)
     return result

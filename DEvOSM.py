@@ -23,7 +23,7 @@ if __name__ == '__main__':
 
     is_completed = False
     sets_data = []
-    start = time.time()
+    start = time.perf_counter()
 
     if os.path.exists(JSON_DIR):
         try:
@@ -86,6 +86,6 @@ if __name__ == '__main__':
                 with open(os.path.join(JSON_DIR, f"Set-{str(set_index)}.json"), 'w+', encoding='utf-8-sig') as fs:
                     json.dump(set_data, fs)
 
-            print(f"DEvOSM execution time: {(time.time() - start):.2f} s")
+            print(f"DEvOSM execution time: {(time.perf_counter() - start):.2f} s")
         except Exception as e:
             print(e)
